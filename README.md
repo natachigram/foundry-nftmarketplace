@@ -1,7 +1,5 @@
 # ERC721 NFT Marketplace Contract PRD
 
-The ERC721 NFT Marketplace Contract is a smart contract that allows users to create and execute orders for ERC721 tokens (NFTs) using VRS signatures for verification. Users can list their NFTs for sale, and buyers can purchase them through secure and verifiable transactions. This document outlines the features, preconditions, and functionality of the contract.
-
 ### 1. `createOrder` Function
 
 - **Description**: Users can create orders for their NFTs by providing the necessary details.
