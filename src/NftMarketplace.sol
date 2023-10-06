@@ -62,7 +62,7 @@ contract NFTMarketplace is Ownable {
         assembly {
             size := extcodesize(_tokenAddress)
         }
-        require(size > 0, "Invalid token address");
+        require(size > 0, "not a token address");
         // Check if the price is greater than 0
         require(_price > 0, "Price must be greater than 0");
         // Check if the deadline is in the future

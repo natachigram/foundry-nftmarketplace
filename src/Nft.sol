@@ -7,7 +7,10 @@ import "openzeppelin-contracts/contracts/utils/Strings.sol";
 contract Nft is ERC721 {
     uint256 public tokenId;
 
-    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) {}
+    constructor(
+        string memory _name,
+        string memory _symbol
+    ) ERC721(_name, _symbol) {}
 
     function mintTo(address recipient) public payable returns (uint256) {
         uint256 newItemId = ++tokenId;
@@ -15,7 +18,9 @@ contract Nft is ERC721 {
         return newItemId;
     }
 
-    function tokenURI(uint256 id) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 id
+    ) public view virtual override returns (string memory) {
         return Strings.toString(id);
     }
 }
