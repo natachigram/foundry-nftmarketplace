@@ -92,32 +92,38 @@ contract NftMarketPlaceTest is Helpers {
         );
     }
 
-    // function testCorrectSignature() public {
-    //     switchSigner(addr1);
-    //     nft.setApprovalForAll(address(nftMarketPlace), true);
-    //     o.deadline = uint256(block.timestamp + 5 minutes);
-    //     o.signature = constructSig(
-    //         o.tokenAddress,
-    //         o.tokenId,
-    //         o.price,
-    //         o.deadline,
-    //         o.seller,
-    //         privKeyB
-    //     );
+    function testzCorrectSignature() public {
+        switchSigner(addr1);
+        nft.setApprovalForAll(address(nftMarketPlace), true);
+        o.deadline = uint88(block.timestamp + 150 minutes);
+        o.signature = constructSig(
+            o.tokenAddress,
+            o.tokenId,
+            o.price,
+            o.deadline,
+            msg.sender,
+            privKeyA
+        );
 
-    //     vm.expectRevert("Invalid signature");
-    //     nftMarketPlace.createOrder(
-    //         o.tokenAddress,
-    //         o.tokenId,
-    //         o.price,
-    //         o.signature,
-    //         o.deadline
-    //     );
-    // }
+        vm.expectRevert("Invalid signature");
+        nftMarketPlace.createOrder(
+            o.tokenAddress,
+            o.tokenId,
+            o.price,
+            o.signature,
+            o.deadline
+        );
+    }
 
     function testListingId() public {
         switchSigner(addr1);
         vm.expectRevert("Invalid listing ID");
+        nftMarketPlace.executeOrder(1);
+    }
+
+    function testActiveOrder() public {
+        testzCorrectSignature();
+        vm.expectRevert("Order is not active");
         nftMarketPlace.executeOrder(0);
     }
 }

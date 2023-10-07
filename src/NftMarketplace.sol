@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
-
+import {SignUtils} from "./libraries/SignUtils.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
@@ -13,11 +13,12 @@ contract NFTMarketplace is Ownable {
         uint256 price;
         bool active;
         bytes signature;
-        uint256 deadline;
+        uint88 deadline;
     }
 
     mapping(uint256 => Order) public orders;
     uint256 public orderCounter;
+    // uint256 public orderId;
 
     event OrderCreation(
         uint256 orderCounter,
@@ -43,7 +44,7 @@ contract NFTMarketplace is Ownable {
         uint256 _tokenId,
         uint256 _price,
         bytes memory _signature,
-        uint256 _deadline
+        uint88 _deadline
     ) public {
         // Check if the owner is the actual owner of the token
         require(
@@ -67,6 +68,21 @@ contract NFTMarketplace is Ownable {
         require(_price > 0, "Price must be greater than 0");
         // Check if the deadline is in the future
         require(_deadline > block.timestamp, "Invalid deadline");
+        // Perform signature verification
+        require(
+            SignUtils.isValid(
+                SignUtils.constructMessageHash(
+                    _tokenAddress,
+                    _tokenId,
+                    _price,
+                    _deadline,
+                    msg.sender
+                ),
+                _signature,
+                msg.sender
+            ),
+            "Invalid signature"
+        );
 
         Order storage newOrder = orders[orderCounter];
         newOrder.seller = msg.sender;
@@ -76,6 +92,7 @@ contract NFTMarketplace is Ownable {
         newOrder.active = true;
         newOrder.signature = _signature;
         newOrder.deadline = _deadline;
+        orderCounter++;
 
         emit OrderCreation(
             orderCounter,
@@ -86,12 +103,12 @@ contract NFTMarketplace is Ownable {
             _signature,
             _deadline
         );
-
-        orderCounter++;
     }
 
-    function executeOrder(uint256 _orderId) public payable {
-        require(_orderId < orderCounter, "Invalid listing ID");
+    function executeOrder(
+        uint256 _orderId
+    ) public payable returns (uint256 orderId) {
+        require(_orderId <= orderCounter, "Invalid listing ID");
         Order storage order = orders[_orderId];
 
         // Check if the order is active
@@ -105,19 +122,7 @@ contract NFTMarketplace is Ownable {
 
         // Check if the deadline has not passed
         require(block.timestamp <= order.deadline, "Order has expired");
-
-        // Perform signature verification
-        require(
-            _verifySignature(
-                order.tokenAddress,
-                order.tokenId,
-                order.price,
-                order.seller,
-                order.signature
-            ),
-            "Invalid signature"
-        );
-
+        order.active = false;
         // Transfer the token to the buyer
         IERC721(order.tokenAddress).transferFrom(
             order.seller,
@@ -127,9 +132,8 @@ contract NFTMarketplace is Ownable {
 
         // Transfer the funds to the seller
         payable(order.seller).transfer(msg.value);
-
+        // return orderId = _orderId;
         // Deactivate the order
-        order.active = false;
 
         emit OrderExecuted(
             _orderId,
