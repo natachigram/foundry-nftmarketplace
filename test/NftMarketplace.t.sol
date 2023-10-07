@@ -92,7 +92,7 @@ contract NftMarketPlaceTest is Helpers {
         );
     }
 
-    function testzCorrectSignature() public {
+    function testCorrectSignature() public {
         switchSigner(addr1);
         nft.setApprovalForAll(address(nftMarketPlace), true);
         o.deadline = uint88(block.timestamp + 150 minutes);
@@ -122,8 +122,40 @@ contract NftMarketPlaceTest is Helpers {
     }
 
     function testActiveOrder() public {
-        testzCorrectSignature();
+        testCorrectSignature();
         vm.expectRevert("Order is not active");
         nftMarketPlace.executeOrder(0);
+    }
+
+    function testingCorrectOrderPrice() public {
+        testCorrectSignature();
+        vm.expectRevert("Transaction value does not match order price");
+
+        nftMarketPlace.executeOrder{value: o.price}(0);
+    }
+
+    function testingzExpiredOrder() public {
+        switchSigner(addr1);
+        nft.setApprovalForAll(address(nftMarketPlace), true);
+        o.deadline = uint88(block.timestamp + 150 minutes);
+        o.signature = constructSig(
+            o.tokenAddress,
+            o.tokenId,
+            o.price,
+            o.deadline,
+            msg.sender,
+            privKeyA
+        );
+        nftMarketPlace.createOrder(
+            o.tokenAddress,
+            o.tokenId,
+            o.price,
+            o.signature,
+            o.deadline
+        );
+
+        vm.expectRevert("Order has expired");
+
+        nftMarketPlace.executeOrder{value: o.price}(0);
     }
 }

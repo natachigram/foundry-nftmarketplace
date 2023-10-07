@@ -6,9 +6,7 @@ import "../src/libraries/SignUtils.sol";
 
 abstract contract Helpers is Test {
     // uint256 user
-    function mkaddr(
-        string memory name
-    ) public returns (address addr, uint256 privateKey) {
+    function mkaddr(string memory name) public returns (address addr, uint256 privateKey) {
         privateKey = uint256(keccak256(abi.encodePacked(name)));
         // address addr = address(uint160(uint256(keccak256(abi.encodePacked(name)))))
         addr = vm.addr(privateKey);
@@ -23,23 +21,15 @@ abstract contract Helpers is Test {
         address _seller,
         uint256 privKey
     ) public returns (bytes memory signature) {
-        bytes32 mHash = keccak256(
-            abi.encodePacked(_token, _tokenId, _price, _deadline, _seller)
-        );
+        bytes32 mHash = keccak256(abi.encodePacked(_token, _tokenId, _price, _deadline, _seller));
 
-        mHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", mHash)
-        );
+        mHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", mHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, mHash);
         signature = getSig(v, r, s);
     }
 
-    function getSig(
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public pure returns (bytes memory signature) {
+    function getSig(uint8 v, bytes32 r, bytes32 s) public pure returns (bytes memory signature) {
         signature = bytes.concat(r, s, bytes1(v));
     }
 
